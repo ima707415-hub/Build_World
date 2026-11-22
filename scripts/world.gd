@@ -76,3 +76,17 @@ func gather_near(world_position: Vector2, reach: float = 58.0) -> String:
     resources.remove_at(nearest_index)
     queue_redraw()
     return String(item.kind)
+
+func serialize_resources() -> Array:
+    var output: Array = []
+    for item in resources:
+        var p: Vector2 = item.position
+        output.append({"kind": String(item.kind), "x": p.x, "y": p.y})
+    return output
+
+func restore_resources(saved: Array) -> void:
+    resources.clear()
+    for item in saved:
+        if item is Dictionary and item.has("kind") and item.has("x") and item.has("y"):
+            resources.append({"kind": String(item.kind), "position": Vector2(float(item.x), float(item.y))})
+    queue_redraw()
