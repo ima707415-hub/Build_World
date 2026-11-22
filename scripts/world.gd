@@ -15,8 +15,8 @@ func generate(world_seed: int = -1) -> void:
     resources.clear()
     var rng := RandomNumberGenerator.new()
     rng.seed = seed_value
-    for y in range(-WORLD_SIZE / 2, WORLD_SIZE / 2):
-        for x in range(-WORLD_SIZE / 2, WORLD_SIZE / 2):
+    for y in range(-int(WORLD_SIZE / 2), int(WORLD_SIZE / 2)):
+        for x in range(-int(WORLD_SIZE / 2), int(WORLD_SIZE / 2)):
             if rng.randf() < 0.012:
                 var kind := ["tree", "stone", "berry", "fiber"][rng.randi_range(0, 3)]
                 resources.append({"kind": kind, "position": Vector2((x + 0.5) * TILE, (y + 0.5) * TILE)})
@@ -33,8 +33,8 @@ func biome_at(x: int, y: int) -> String:
     return "grass"
 
 func _draw() -> void:
-    for y in range(-WORLD_SIZE / 2, WORLD_SIZE / 2):
-        for x in range(-WORLD_SIZE / 2, WORLD_SIZE / 2):
+    for y in range(-int(WORLD_SIZE / 2), int(WORLD_SIZE / 2)):
+        for x in range(-int(WORLD_SIZE / 2), int(WORLD_SIZE / 2)):
             var biome := biome_at(x, y)
             var tile_color := Color("#75a95b")
             match biome:
