@@ -3,6 +3,7 @@ extends Node2D
 const PlayerScript = preload("res://scripts/player.gd")
 const WorldScript = preload("res://scripts/world.gd")
 const SaveManager = preload("res://scripts/save_manager.gd")
+const CreatureScript = preload("res://scripts/creature.gd")
 
 var world: BWWorld
 var player: BWPlayer
@@ -25,6 +26,7 @@ func _ready() -> void:
     camera.make_current()
     _build_hud()
     _load_game()
+    _spawn_creatures()
     _refresh_inventory()
     _show_message("BuildWorld 1.0 prototype. Explore, gather, craft and save.")
 
@@ -90,6 +92,16 @@ func _gather() -> void:
         "fiber": inventory.fiber += 1
     _refresh_inventory()
     _show_message("Collected: " + kind)
+
+func _spawn_creatures() -> void:
+    var rng := RandomNumberGenerator.new()
+    rng.randomize()
+    var creature_types := ["rabbit", "rabbit", "rabbit", "boar", "slime", "slime"]
+    for creature_type in creature_types:
+        var creature: BWCreature = CreatureScript.new()
+        creature.setup(creature_type, player, rng.randi())
+        creature.position = Vector2(rng.randf_range(-500.0, 500.0), rng.randf_range(-350.0, 350.0))
+        add_child(creature)
 
 func _craft_axe() -> void:
     if inventory.wood < 2 or inventory.stone < 1 or inventory.fiber < 1:
