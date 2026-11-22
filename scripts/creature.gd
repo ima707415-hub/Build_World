@@ -40,11 +40,11 @@ func _draw() -> void:
     match kind:
         "rabbit":
             draw_circle(Vector2(0, 2), 9, Color("#eee5d5"))
-            draw_ellipse(Vector2(-4, -8), Vector2(3, 8), Color("#eee5d5"))
-            draw_ellipse(Vector2(4, -8), Vector2(3, 8), Color("#eee5d5"))
+            draw_circle(Vector2(-4, -8), 3, Color("#eee5d5"))
+            draw_circle(Vector2(4, -8), 3, Color("#eee5d5"))
             draw_circle(Vector2(3, -1), 1.3, Color("#292929"))
         "boar":
-            draw_ellipse(Vector2.ZERO, Vector2(13, 9), Color("#76513a"))
+            draw_circle(Vector2.ZERO, 11, Color("#76513a"))
             draw_circle(Vector2(10, 1), 5, Color("#9b7052"))
             draw_circle(Vector2(12, 0), 1.5, Color("#242424"))
         "slime":
