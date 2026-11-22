@@ -28,6 +28,10 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action's default legacy "tools" package no longer exists.
+          packages: platform-tools
+          accept-android-sdk-licenses: true
 
       - name: Install Android build packages
         run: |
