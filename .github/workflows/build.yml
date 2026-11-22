@@ -29,7 +29,6 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          # The action's default legacy "tools" package no longer exists.
           packages: platform-tools
           accept-android-sdk-licenses: true
 
@@ -67,6 +66,26 @@ jobs:
             -keysize 2048 \
             -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
+
+          # Godot validates the signing fields in the export preset itself.
+          python3 - <<'PY'
+          from pathlib import Path
+          preset = Path("export_presets.cfg")
+          content = preset.read_text()
+          marker = "[preset.0.options]\n"
+          signing = (
+              'keystore/debug="' + str(Path.home() / ".android/debug.keystore") + '"\n'
+              'keystore/debug_user="androiddebugkey"\n'
+              'keystore/debug_password="android"\n'
+              'keystore/release=""\n'
+              'keystore/release_user=""\n'
+              'keystore/release_password=""\n'
+          )
+          if marker not in content:
+              raise SystemExit("Android export preset options section is missing")
+          content = content.replace(marker, marker + signing, 1)
+          preset.write_text(content)
+          PY
 
       - name: Import project
         run: godot --headless --editor --path . --quit
