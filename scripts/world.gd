@@ -14,11 +14,12 @@ func generate(world_seed: int = -1) -> void:
     noise.fractal_octaves = 3
     resources.clear()
     var rng := RandomNumberGenerator.new()
+    var resource_kinds: Array[String] = ["tree", "stone", "berry", "fiber"]
     rng.seed = seed_value
     for y in range(-int(WORLD_SIZE / 2), int(WORLD_SIZE / 2)):
         for x in range(-int(WORLD_SIZE / 2), int(WORLD_SIZE / 2)):
             if rng.randf() < 0.012:
-                var kind := ["tree", "stone", "berry", "fiber"][rng.randi_range(0, 3)]
+                var kind: String = resource_kinds[rng.randi_range(0, 3)]
                 resources.append({"kind": kind, "position": Vector2((x + 0.5) * TILE, (y + 0.5) * TILE)})
     queue_redraw()
 
