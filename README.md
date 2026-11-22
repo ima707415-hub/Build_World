@@ -1,2 +1,34 @@
-# Build_World
-BuildWorld is a 2D survival sandbox where you explore, build, craft, collect resources, and encounter animals and monsters. Discover new biomes, create tools, build houses, and shape your own world. Your world, your rules! Android game made with Godot 4. Created by 777GDONLINE.
+# BuildWorld
+
+**Your world, your rules!**  
+Автор: **777GDONLINE**  
+Версия: **1.0 prototype**  
+Движок: **Godot 4.3+**  
+Платформа: **Android / Desktop**  
+Жанр: **2D Survival Sandbox**
+
+## Что уже реализовано
+
+- Процедурная карта с травяными, лесными, сухими и водными зонами.
+- Игрок с камерой, следующей за ним.
+- Управление с клавиатуры и сенсорными кнопками.
+- Сбор дерева, камня, ягод и волокна.
+- Базовый интерфейс и счётчики инвентаря.
+
+Это начальный игровой прототип, а не полная реализация всех систем из плана BuildWorld 1.0.
+
+## Запуск
+
+1. Установите Godot 4.3 или новее.
+2. Откройте `project.godot` в Godot.
+3. Запустите проект кнопкой **Run Project**.
+
+## Android APK
+
+Для экспорта установите совместимые Godot Export Templates, Android SDK и JDK, затем настройте Android export preset в Godot. APK пока не приложен: экспорт требует настроенной Android-среды и проверки проекта в движке.
+
+## Следующие этапы
+
+Сохранение нескольких миров, главное меню, крафт, инструменты, строительство, животные и мобы, погода, сельское хозяйство, tutorial и локализации.
+
+**Автор:** 777GDONLINE
