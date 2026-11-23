@@ -57,32 +57,52 @@ jobs:
           export/android/debug_keystore_pass = "android"
           EOF
 
-      - name: Create Android debug keystore
+      - name: Configure Android signing key
+        env:
+          BUILDWORLD_KEYSTORE_BASE64: ${{ secrets.BUILDWORLD_KEYSTORE_BASE64 }}
+          BUILDWORLD_KEYSTORE_PASSWORD: ${{ secrets.BUILDWORLD_KEYSTORE_PASSWORD }}
+          BUILDWORLD_KEY_ALIAS: ${{ secrets.BUILDWORLD_KEY_ALIAS }}
+          BUILDWORLD_KEY_PASSWORD: ${{ secrets.BUILDWORLD_KEY_PASSWORD }}
+        shell: bash
         run: |
           mkdir -p "$HOME/.android"
-          keytool -genkeypair -v \
-            -keystore "$HOME/.android/debug.keystore" \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
 
-          # Godot validates the signing fields in the export preset itself.
+          if [ -n "$BUILDWORLD_KEYSTORE_BASE64" ]; then
+            echo "$BUILDWORLD_KEYSTORE_BASE64" | base64 --decode > "$HOME/.android/buildworld-release.keystore"
+            KEYSTORE_PATH="$HOME/.android/buildworld-release.keystore"
+            KEYSTORE_USER="$BUILDWORLD_KEY_ALIAS"
+            KEYSTORE_PASS="$BUILDWORLD_KEY_PASSWORD"
+            echo "Using the persistent BuildWorld signing key."
+          else
+            echo "::warning::Persistent signing key is not configured. This APK will not be guaranteed installable as an update over APKs signed with another key."
+            keytool -genkeypair -v \\
+              -keystore "$HOME/.android/debug.keystore" \\
+              -storepass android \\
+              -alias androiddebugkey \\
+              -keypass android \\
+              -keyalg RSA \\
+              -keysize 2048 \\
+              -validity 10000 \\
+              -dname "CN=Android Debug,O=Android,C=US"
+            KEYSTORE_PATH="$HOME/.android/debug.keystore"
+            KEYSTORE_USER="androiddebugkey"
+            KEYSTORE_PASS="android"
+          fi
+
+          export KEYSTORE_PATH KEYSTORE_USER KEYSTORE_PASS
           python3 - <<'PY'
+          import os
           from pathlib import Path
           preset = Path("export_presets.cfg")
           content = preset.read_text()
-          marker = "[preset.0.options]\n"
+          marker = "[preset.0.options]\\n"
           signing = (
-              'keystore/debug="' + str(Path.home() / ".android/debug.keystore") + '"\n'
-              'keystore/debug_user="androiddebugkey"\n'
-              'keystore/debug_password="android"\n'
-              'keystore/release=""\n'
-              'keystore/release_user=""\n'
-              'keystore/release_password=""\n'
+              f'keystore/debug="{os.environ["KEYSTORE_PATH"]}"\\n'
+              f'keystore/debug_user="{os.environ["KEYSTORE_USER"]}"\\n'
+              f'keystore/debug_password="{os.environ["KEYSTORE_PASS"]}"\\n'
+              f'keystore/release="{os.environ["KEYSTORE_PATH"]}"\\n'
+              f'keystore/release_user="{os.environ["KEYSTORE_USER"]}"\\n'
+              f'keystore/release_password="{os.environ["KEYSTORE_PASS"]}"\\n'
           )
           if marker not in content:
               raise SystemExit("Android export preset options section is missing")
