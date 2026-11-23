@@ -6,6 +6,21 @@ const WORLD_SIZE := 96
 var seed_value: int = 0
 var noise := FastNoiseLite.new()
 var resources: Array[Dictionary] = []
+var _last_view_bounds := Vector4i(999999, 999999, -999999, -999999)
+
+func _process(_delta: float) -> void:
+    var bounds := _visible_tile_bounds()
+    if bounds != _last_view_bounds:
+        _last_view_bounds = bounds
+        queue_redraw()
+
+func _visible_tile_bounds() -> Vector4i:
+    var bounds := _visible_tile_bounds()
+    var min_x := bounds.x
+    var min_y := bounds.y
+    var max_x := bounds.z
+    var max_y := bounds.w
+    return Vector4i(min_x, min_y, max_x, max_y)
 
 func generate(world_seed: int = -1) -> void:
     seed_value = world_seed if world_seed >= 0 else randi()
