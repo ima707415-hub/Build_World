@@ -5,8 +5,8 @@
 config_version=5
 
 [application]
-config/name="BuildWorld"
-config/description="Your world, your rules! A 2D survival sandbox by 777GDONLINE."
+config/name="BuildWorld: Создай свой мир"
+config/description="Твой мир, твои правила! 2D-песочница на выживание от 777GDONLINE."
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 
