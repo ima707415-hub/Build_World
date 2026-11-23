@@ -34,19 +34,33 @@ func biome_at(x: int, y: int) -> String:
     return "grass"
 
 func _draw() -> void:
-    for y in range(-int(WORLD_SIZE / 2), int(WORLD_SIZE / 2)):
-        for x in range(-int(WORLD_SIZE / 2), int(WORLD_SIZE / 2)):
-            var biome := biome_at(x, y)
+    # Draw only tiles around the camera. The world remains large, but off-screen
+    # terrain no longer creates thousands of needless draw calls every frame.
+    var inverse := get_viewport().get_canvas_transform().affine_inverse()
+    var view_min := inverse * Vector2.ZERO
+    var view_max := inverse * get_viewport_rect().size
+    var min_x := maxi(-int(WORLD_SIZE / 2), floori(minf(view_min.x, view_max.x) / TILE) - 1)
+    var max_x := mini(int(WORLD_SIZE / 2) - 1, ceili(maxf(view_min.x, view_max.x) / TILE) + 1)
+    var min_y := maxi(-int(WORLD_SIZE / 2), floori(minf(view_min.y, view_max.y) / TILE) - 1)
+    var max_y := mini(int(WORLD_SIZE / 2) - 1, ceili(maxf(view_min.y, view_max.y) / TILE) + 1)
+
+    for y in range(min_y, max_y + 1):
+        for x in range(min_x, max_x + 1):
+            var n := noise.get_noise_2d(x, y)
             var tile_color := Color("#75a95b")
-            match biome:
-                "water": tile_color = Color("#397fae")
-                "forest": tile_color = Color("#4e8749")
-                "dry": tile_color = Color("#b9a36b")
-            var rect := Rect2(Vector2(x * TILE, y * TILE), Vector2(TILE, TILE))
-            draw_rect(rect, tile_color)
-            draw_rect(rect, tile_color.darkened(0.08), false, 1.0)
+            if n < -0.38:
+                tile_color = Color("#397fae")
+            elif n > 0.42:
+                tile_color = Color("#4e8749")
+            elif noise.get_noise_2d(x + 900, y - 400) > 0.25:
+                tile_color = Color("#b9a36b")
+            draw_rect(Rect2(Vector2(x * TILE, y * TILE), Vector2(TILE + 1, TILE + 1)), tile_color)
+
+    var visible_rect := Rect2(Vector2(min_x * TILE, min_y * TILE), Vector2((max_x - min_x + 1) * TILE, (max_y - min_y + 1) * TILE))
     for item in resources:
         var p: Vector2 = item.position
+        if not visible_rect.has_point(p):
+            continue
         match item.kind:
             "tree":
                 draw_rect(Rect2(p + Vector2(-4, 0), Vector2(8, 17)), Color("#76502e"))
