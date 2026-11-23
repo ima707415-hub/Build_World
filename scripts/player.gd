@@ -12,7 +12,6 @@ func _physics_process(_delta: float) -> void:
         direction = touch_direction
     velocity = direction.normalized() * move_speed
     move_and_slide()
-    queue_redraw()
 
 func _draw() -> void:
     draw_circle(Vector2(0, 3), 13, Color(0.12, 0.10, 0.08, 0.28))
