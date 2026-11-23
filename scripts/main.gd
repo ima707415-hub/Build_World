@@ -4,6 +4,7 @@ const PlayerScript = preload("res://scripts/player.gd")
 const WorldScript = preload("res://scripts/world.gd")
 const SaveManager = preload("res://scripts/save_manager.gd")
 const CreatureScript = preload("res://scripts/creature.gd")
+const JoystickScript = preload("res://scripts/virtual_joystick.gd")
 
 var world: BWWorld
 var player: BWPlayer
@@ -28,62 +29,67 @@ func _ready() -> void:
     _load_game()
     _spawn_creatures()
     _refresh_inventory()
-    _show_message("BuildWorld 1.0 prototype. Explore, gather, craft and save.")
+    _show_message("Добро пожаловать в BuildWorld!")
 
 func _build_hud() -> void:
     var layer := CanvasLayer.new()
     add_child(layer)
+    var ui := Control.new()
+    ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    ui.mouse_filter = Control.MOUSE_FILTER_PASS
+    layer.add_child(ui)
+
     var panel := PanelContainer.new()
     panel.position = Vector2(16, 16)
-    panel.custom_minimum_size = Vector2(330, 116)
-    layer.add_child(panel)
+    panel.custom_minimum_size = Vector2(310, 92)
+    ui.add_child(panel)
     var column := VBoxContainer.new()
     panel.add_child(column)
     var heading := Label.new()
-    heading.text = "BUILDWORLD  |  SURVIVAL"
-    heading.add_theme_font_size_override("font_size", 18)
+    heading.text = "BUILDWORLD"
+    heading.add_theme_font_size_override("font_size", 20)
     column.add_child(heading)
     inventory_label = Label.new()
     column.add_child(inventory_label)
 
     message_label = Label.new()
-    message_label.position = Vector2(16, 140)
+    message_label.position = Vector2(16, 118)
     message_label.add_theme_color_override("font_color", Color("#ffffff"))
     message_label.add_theme_font_size_override("font_size", 16)
-    layer.add_child(message_label)
+    message_label.add_theme_color_override("font_shadow_color", Color("#202020"))
+    message_label.add_theme_constant_override("shadow_offset_x", 2)
+    message_label.add_theme_constant_override("shadow_offset_y", 2)
+    ui.add_child(message_label)
 
-    _add_button(layer, "GATHER", Vector2(16, 192), Vector2(120, 48), _gather)
-    _add_button(layer, "CRAFT AXE", Vector2(148, 192), Vector2(120, 48), _craft_axe)
-    _add_button(layer, "WORKBENCH", Vector2(280, 192), Vector2(132, 48), _craft_workbench)
-    _add_button(layer, "SAVE", Vector2(16, 250), Vector2(120, 44), _save_game)
-    _add_button(layer, "NEW WORLD", Vector2(148, 250), Vector2(120, 44), _new_world)
+    var joystick: Control = JoystickScript.new()
+    joystick.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+    joystick.position = Vector2(22, -205)
+    joystick.custom_minimum_size = Vector2(180, 180)
+    joystick.direction_changed.connect(func(value: Vector2): player.touch_direction = value)
+    ui.add_child(joystick)
 
-    _add_move_button(layer, "↑", Vector2(110, 0), Vector2.UP)
-    _add_move_button(layer, "←", Vector2(54, 54), Vector2.LEFT)
-    _add_move_button(layer, "↓", Vector2(110, 54), Vector2.DOWN)
-    _add_move_button(layer, "→", Vector2(166, 54), Vector2.RIGHT)
+    var actions := VBoxContainer.new()
+    actions.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+    actions.position = Vector2(-166, -204)
+    actions.add_theme_constant_override("separation", 8)
+    ui.add_child(actions)
+    _add_action_button(actions, "СОБРАТЬ", _gather)
+    _add_action_button(actions, "СОЗДАТЬ ТОПОР", _craft_axe)
+    _add_action_button(actions, "ВЕРСТАК", _craft_workbench)
+    _add_action_button(actions, "СОХРАНИТЬ", _save_game)
+    _add_action_button(actions, "НОВЫЙ МИР", _new_world)
 
-func _add_button(layer: CanvasLayer, caption: String, pos: Vector2, button_size: Vector2, action: Callable) -> void:
+func _add_action_button(parent: VBoxContainer, caption: String, action: Callable) -> void:
     var button := Button.new()
     button.text = caption
-    button.position = pos
-    button.custom_minimum_size = button_size
+    button.custom_minimum_size = Vector2(150, 38)
     button.pressed.connect(action)
-    layer.add_child(button)
-
-func _add_move_button(layer: CanvasLayer, caption: String, offset: Vector2, direction: Vector2) -> void:
-    var button := Button.new()
-    button.text = caption
-    button.position = Vector2(16, 520) + offset
-    button.custom_minimum_size = Vector2(50, 50)
-    button.button_down.connect(func(): player.touch_direction = direction)
-    button.button_up.connect(func(): player.touch_direction = Vector2.ZERO)
-    layer.add_child(button)
+    parent.add_child(button)
 
 func _gather() -> void:
     var kind := world.gather_near(player.global_position, 72.0)
     if kind == "":
-        _show_message("No resource nearby. Explore the world!")
+        _show_message("Рядом нет ресурсов. Исследуй мир!")
         return
     match kind:
         "tree": inventory.wood += 1
@@ -91,7 +97,8 @@ func _gather() -> void:
         "berry": inventory.berries += 1
         "fiber": inventory.fiber += 1
     _refresh_inventory()
-    _show_message("Collected: " + kind)
+    var names := {"tree": "дерево", "stone": "камень", "berry": "ягоды", "fiber": "волокно"}
+    _show_message("Собрано: " + names.get(kind, kind))
 
 func _spawn_creatures() -> void:
     var rng := RandomNumberGenerator.new()
@@ -105,27 +112,27 @@ func _spawn_creatures() -> void:
 
 func _craft_axe() -> void:
     if inventory.wood < 2 or inventory.stone < 1 or inventory.fiber < 1:
-        _show_message("Axe needs 2 wood, 1 stone and 1 fiber.")
+        _show_message("Для топора нужно: 2 дерева, 1 камень и 1 волокно.")
         return
     inventory.wood -= 2
     inventory.stone -= 1
     inventory.fiber -= 1
     inventory.axe += 1
     _refresh_inventory()
-    _show_message("Crafted a basic axe!")
+    _show_message("Создан простой топор!")
 
 func _craft_workbench() -> void:
     if inventory.wood < 8 or inventory.stone < 4:
-        _show_message("Workbench needs 8 wood and 4 stone.")
+        _show_message("Для верстака нужно: 8 дерева и 4 камня.")
         return
     inventory.wood -= 8
     inventory.stone -= 4
     inventory.workbench += 1
     _refresh_inventory()
-    _show_message("Workbench crafted! More recipes coming soon.")
+    _show_message("Верстак создан!")
 
 func _refresh_inventory() -> void:
-    inventory_label.text = "Wood: %d  Stone: %d  Berries: %d  Fiber: %d\nAxes: %d  Workbenches: %d" % [inventory.wood, inventory.stone, inventory.berries, inventory.fiber, inventory.axe, inventory.workbench]
+    inventory_label.text = "Дерево: %d  Камень: %d\nЯгоды: %d  Волокно: %d\nТопоры: %d  Верстаки: %d" % [inventory.wood, inventory.stone, inventory.berries, inventory.fiber, inventory.axe, inventory.workbench]
 
 func _save_game() -> void:
     var data := {
@@ -137,9 +144,9 @@ func _save_game() -> void:
         "resources": world.serialize_resources()
     }
     if SaveManager.save_game(data):
-        _show_message("World saved on this device.")
+        _show_message("Мир сохранён на этом устройстве.")
     else:
-        _show_message("Save failed. Check device storage permissions.")
+        _show_message("Не удалось сохранить мир.")
 
 func _load_game() -> void:
     var data: Dictionary = SaveManager.load_game()
@@ -156,7 +163,7 @@ func _load_game() -> void:
     var saved_resources: Variant = data.get("resources", [])
     if saved_resources is Array:
         world.restore_resources(saved_resources)
-    _show_message("Saved world loaded.")
+    _show_message("Сохранённый мир загружен.")
 
 func _new_world() -> void:
     world_seed = randi()
@@ -164,7 +171,7 @@ func _new_world() -> void:
     player.global_position = Vector2.ZERO
     inventory = {"wood": 0, "stone": 0, "berries": 0, "fiber": 0, "axe": 0, "workbench": 0}
     _refresh_inventory()
-    _show_message("New world created. Save to keep your progress.")
+    _show_message("Создан новый мир.")
 
 func _show_message(value: String) -> void:
     message_label.text = value
