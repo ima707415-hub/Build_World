@@ -15,11 +15,13 @@ func _process(_delta: float) -> void:
         queue_redraw()
 
 func _visible_tile_bounds() -> Vector4i:
-    var bounds := _visible_tile_bounds()
-    var min_x := bounds.x
-    var min_y := bounds.y
-    var max_x := bounds.z
-    var max_y := bounds.w
+    var inverse := get_viewport().get_canvas_transform().affine_inverse()
+    var view_min := inverse * Vector2.ZERO
+    var view_max := inverse * get_viewport_rect().size
+    var min_x := maxi(-int(WORLD_SIZE / 2), floori(minf(view_min.x, view_max.x) / TILE) - 1)
+    var max_x := mini(int(WORLD_SIZE / 2) - 1, ceili(maxf(view_min.x, view_max.x) / TILE) + 1)
+    var min_y := maxi(-int(WORLD_SIZE / 2), floori(minf(view_min.y, view_max.y) / TILE) - 1)
+    var max_y := mini(int(WORLD_SIZE / 2) - 1, ceili(maxf(view_min.y, view_max.y) / TILE) + 1)
     return Vector4i(min_x, min_y, max_x, max_y)
 
 func generate(world_seed: int = -1) -> void:
@@ -49,15 +51,11 @@ func biome_at(x: int, y: int) -> String:
     return "grass"
 
 func _draw() -> void:
-    # Draw only tiles around the camera. The world remains large, but off-screen
-    # terrain no longer creates thousands of needless draw calls every frame.
-    var inverse := get_viewport().get_canvas_transform().affine_inverse()
-    var view_min := inverse * Vector2.ZERO
-    var view_max := inverse * get_viewport_rect().size
-    var min_x := maxi(-int(WORLD_SIZE / 2), floori(minf(view_min.x, view_max.x) / TILE) - 1)
-    var max_x := mini(int(WORLD_SIZE / 2) - 1, ceili(maxf(view_min.x, view_max.x) / TILE) + 1)
-    var min_y := maxi(-int(WORLD_SIZE / 2), floori(minf(view_min.y, view_max.y) / TILE) - 1)
-    var max_y := mini(int(WORLD_SIZE / 2) - 1, ceili(maxf(view_min.y, view_max.y) / TILE) + 1)
+    var bounds := _visible_tile_bounds()
+    var min_x := bounds.x
+    var min_y := bounds.y
+    var max_x := bounds.z
+    var max_y := bounds.w
 
     for y in range(min_y, max_y + 1):
         for x in range(min_x, max_x + 1):
