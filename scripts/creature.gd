@@ -34,7 +34,6 @@ func _process(delta: float) -> void:
         direction = wander_direction
         change_direction_time = rng.randf_range(1.2, 3.5)
     global_position += direction * speed * delta
-    queue_redraw()
 
 func _draw() -> void:
     match kind:
